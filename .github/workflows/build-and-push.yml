@@ -1,13 +1,10 @@
 name: Build and Push Docker Image to Docker Hub
 
-# This workflow runs on pushes to the main branch, but only if there are
-# changes within the 'movie-serving-api' directory.
+# This workflow runs on pushes to the main branch.
 on:
   push:
     branches:
       - main
-    paths:
-      - 'movie-serving-api/**'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -34,14 +31,14 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # The image name will be like 'your-dockerhub-username/movie-recommendation-api '
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/movie-recommendation-api
+          # The image name will be like 'your-dockerhub-username/movie-serving-api'
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/movie-serving-api
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./movie-serving-api
-          file: ./movie-serving-api/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
