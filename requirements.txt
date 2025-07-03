@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+supabase
+sentence-transformers
+pandas
+pydantic
+pydantic-settings
+PyYAML
+python-dotenv
+#gcsfs
+#google-cloud-storage
+
+# Testing
+pytest
+httpx
+pytest-mock
+
