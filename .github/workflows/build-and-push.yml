@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          # The image name will be like 'your-dockerhub-username/movie-recommendation-api'
+          # The image name will be like 'your-dockerhub-username/movie-recommendation-api '
           images: ${{ secrets.DOCKERHUB_USERNAME }}/movie-recommendation-api
 
       - name: Build and push Docker image
