@@ -20,8 +20,8 @@ client = TestClient(app)
 
 # Sample data to be returned by the mock
 FAKE_MOVIE_RECS = [
-    {'id': 1, 'title': 'Test Movie 1', 'overview': 'An overview', 'release_date': '2022-01-01', 'similarity': 0.9},
-    {'id': 2, 'title': 'Test Movie 2', 'overview': 'Another overview', 'release_date': '2022-01-02', 'similarity': 0.8}
+    {'id': 1, 'title': 'Test Movie 1', 'overview': 'An overview', 'similarity': 0.9},
+    {'id': 2, 'title': 'Test Movie 2', 'overview': 'Another overview', 'similarity': 0.8}
 ]
 
 @pytest.fixture(autouse=True)
