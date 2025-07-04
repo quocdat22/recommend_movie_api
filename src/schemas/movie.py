@@ -8,7 +8,6 @@ class MovieRecommendation(BaseModel):
     id: int
     title: str
     overview: Optional[str] = None
-    release_date: Optional[str] = None
     similarity: float
 
     model_config = ConfigDict(from_attributes=True)
