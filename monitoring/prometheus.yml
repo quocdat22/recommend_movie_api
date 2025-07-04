@@ -1,0 +1,9 @@
+# prometheus.yml
+global:
+  scrape_interval: 15s # How frequently to scrape targets
+
+scrape_configs:
+  - job_name: 'fastapi-app'
+    # This address is static because Docker Compose provides a DNS for services
+    static_configs:
+      - targets: ['api:8000'] # 'api' is the service name, 8000 is the port
