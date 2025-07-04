@@ -14,6 +14,7 @@ This service is part of a larger MLOps project. See the main project [README](..
 - **Dockerized**: Comes with a multi-stage `Dockerfile` for building a small, efficient, and secure production image.
 - **Dependency Injection**: The recommendation model is loaded only once at startup for maximum performance.
 - **Configurable**: Settings are managed via a `.env` file and a `configs/` directory.
+- **Comprehensive Monitoring**: Built-in Prometheus metrics for performance tracking, with Grafana dashboards for visualization.
 
 ---
 
@@ -115,10 +116,20 @@ Once everything is running, you can access the different services in your browse
 - **Grafana**: [http://localhost:3000](http://localhost:3000) (Login with `admin` / `admin`)
 - **API Metrics**: [http://localhost:8000/metrics](http://localhost:8000/metrics)
 
-### 3. Next Steps in Grafana
+### 3. Monitoring Features
 
-After logging into Grafana, you will need to:
-1.  **Add Data Sources**:
-    - **Prometheus**: URL `http://prometheus:9090`
-    - **Loki**: URL `http://loki:3100`
-2.  **Build Dashboards**: Create dashboards to visualize metrics from Prometheus and logs from Loki.
+The API comes with comprehensive monitoring features:
+
+- **Pre-configured Grafana Dashboard**: The monitoring setup includes a pre-configured dashboard with the following panels:
+  - **API Request Rate**: Tracks the number of requests per minute to each endpoint
+  - **Response Time**: Shows p50, p95, and p99 response time latencies
+  - **Error Rate**: Visualizes the rate of error responses (4xx and 5xx status codes)
+  - **Request/Response Size**: Monitors the size of requests and responses
+  - **API Logs**: Displays real-time logs from the API service
+
+- **Custom Metrics**:
+  - Response time (latency) tracking across all endpoints
+  - Request and response size monitoring
+  - Error rate tracking with detailed status codes
+
+All metrics are available through the `/metrics` endpoint and can be viewed in the pre-configured Grafana dashboard.
