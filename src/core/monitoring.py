@@ -1,108 +1,106 @@
 """
-Monitoring configuration for the API.
+Monitoring configuration for the API, specifically for Grafana Cloud Remote Write.
 """
 import os
 import logging
+import threading
 import time
 from typing import Callable
+
+import requests
+import snappy
 from fastapi import FastAPI
-from prometheus_client import push_to_gateway, REGISTRY
-import threading
+from prometheus_client import REGISTRY, exposition
 
 logger = logging.getLogger(__name__)
 
-class GrafanaCloudMetricsExporter:
+
+class GrafanaCloudRemoteWriteExporter:
     """
-    Export metrics to Grafana Cloud using Prometheus remote write.
+    Exports metrics to Grafana Cloud using the Prometheus Remote Write protocol.
+    This implementation is more robust for Grafana Cloud than using push_to_gateway.
     """
+
     def __init__(self, app_name: str = "movie-api"):
         self.app_name = app_name
-        self.metrics_endpoint = os.getenv("METRICS_ENDPOINT")
-        self.metrics_username = os.getenv("METRICS_USERNAME")
-        self.metrics_password = os.getenv("METRICS_PASSWORD")
+        self.remote_write_url = os.getenv("METRICS_ENDPOINT")
+        self.username = os.getenv("METRICS_USERNAME")
+        self.password = os.getenv("METRICS_PASSWORD")
+        self.push_interval = int(os.getenv("METRICS_PUSH_INTERVAL", "15"))
         self.registry = REGISTRY
-        self.push_interval = int(os.getenv("METRICS_PUSH_INTERVAL", "15"))  # seconds
-        self.is_enabled = bool(self.metrics_endpoint and self.metrics_username and self.metrics_password)
+
+        self.is_enabled = all([self.remote_write_url, self.username, self.password])
         self._stop_event = threading.Event()
         self._thread = None
+        self.session = requests.Session()
+        
+        if self.is_enabled:
+            # The assert calls are for the type checker to understand that these are not None.
+            assert self.username is not None
+            assert self.password is not None
+            self.session.auth = (self.username, self.password)
+        
+        self.session.headers.update({
+            "Content-Type": "application/x-protobuf",
+            "Content-Encoding": "snappy",
+            "X-Prometheus-Remote-Write-Version": "0.1.0"
+        })
 
     def start(self):
-        """Start the metrics push thread if configuration is available."""
         if not self.is_enabled:
-            logger.info("Grafana Cloud metrics export not configured. Skipping.")
+            logger.info("Grafana Cloud Remote Write exporter is not configured. Skipping.")
             return
-        
-        logger.info(f"Starting metrics push to {self.metrics_endpoint} every {self.push_interval}s")
-        self._thread = threading.Thread(target=self._push_metrics_loop, daemon=True)
+
+        logger.info(f"Starting Remote Write exporter to {self.remote_write_url} every {self.push_interval}s")
+        self._thread = threading.Thread(target=self._push_loop, daemon=True)
         self._thread.start()
 
     def stop(self):
-        """Stop the metrics push thread."""
         if self._thread:
             self._stop_event.set()
             self._thread.join(timeout=5)
-            logger.info("Metrics push thread stopped")
+            logger.info("Remote Write exporter stopped.")
 
-    def _push_metrics_loop(self):
-        """Push metrics to Grafana Cloud at regular intervals."""
+    def _push_loop(self):
         while not self._stop_event.is_set():
             try:
                 self._push_metrics()
             except Exception as e:
-                logger.error(f"Error pushing metrics to Grafana Cloud: {e}")
-            
-            # Sleep until next interval or stop event
+                logger.error(f"Failed to push metrics to Grafana Cloud: {e}", exc_info=True)
             self._stop_event.wait(self.push_interval)
 
     def _push_metrics(self):
-        """Push current metrics to Grafana Cloud."""
-        if not self.is_enabled:
-            return
+        # Generate metrics in Prometheus protobuf format
+        proto_data = exposition.generate_latest(self.registry, 'application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited')
         
-        try:
-            # Use basic auth for Grafana Cloud
-            push_to_gateway(
-                gateway=self.metrics_endpoint,
-                job=self.app_name,
-                registry=self.registry,
-                handler=self._basic_auth_handler()
-            )
-            logger.debug("Successfully pushed metrics to Grafana Cloud")
-        except Exception as e:
-            logger.error(f"Failed to push metrics: {e}")
+        # Compress with snappy
+        compressed_data = snappy.compress(proto_data)
 
-    def _basic_auth_handler(self) -> Callable:
-        """Create a basic auth handler for the Prometheus push gateway."""
-        import base64
-        import urllib.request
-        
-        auth = f"{self.metrics_username}:{self.metrics_password}"
-        encoded_auth = base64.b64encode(auth.encode()).decode()
-        
-        def handler(url, method, timeout, headers, data):
-            # The prometheus-client passes headers as a list of tuples.
-            # We need to convert it to a dictionary for urllib.request.Request.
-            headers_dict = dict(headers)
-            
-            request = urllib.request.Request(url=url, data=data, headers=headers_dict, method=method)
-            request.add_header("Authorization", f"Basic {encoded_auth}")
-            return urllib.request.urlopen(request, timeout=timeout)
-        
-        return handler
+        try:
+            if not self.remote_write_url:
+                logger.error("Remote write URL is not set, cannot push metrics.")
+                return
+
+            response = self.session.post(self.remote_write_url, data=compressed_data, timeout=10)
+            response.raise_for_status()  # This will raise an exception for 4xx/5xx errors
+            logger.debug(f"Successfully pushed metrics to Grafana Cloud. Status: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error sending metrics to Grafana Cloud: {e}")
+            # Optionally log response body for more details if available
+            if e.response is not None:
+                logger.error(f"Response body: {e.response.text}")
+
 
 def setup_monitoring(app: FastAPI):
     """Set up monitoring for the FastAPI application."""
-    # Create and start the metrics exporter
-    metrics_exporter = GrafanaCloudMetricsExporter()
-    
+    exporter = GrafanaCloudRemoteWriteExporter()
+
     @app.on_event("startup")
     def startup_metrics():
-        metrics_exporter.start()
-    
-    # Add event handlers to manage the exporter lifecycle
+        exporter.start()
+
     @app.on_event("shutdown")
     def shutdown_metrics():
-        metrics_exporter.stop()
-    
-    # Return the exporter in case it's needed elsewhere
-    return metrics_exporter 
+        exporter.stop()
+
+    return exporter 
