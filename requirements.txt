@@ -1,7 +1,6 @@
 fastapi
 uvicorn[standard]
 supabase
-sentence-transformers
 pandas
 pydantic
 pydantic-settings
