@@ -22,17 +22,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure the instrumentator with enhanced metrics
-# The constructor is simplified in newer versions.
-instrumentator = Instrumentator()
+# Configure the instrumentator.
+# Exclusions are passed in the constructor in recent versions.
+instrumentator = Instrumentator(excluded_handlers=["/metrics", "/docs", "/openapi.json"])
 
 instrumentator.add(requests(metric_name="http_requests_total", metric_doc="Total number of requests by method, status and handler."))
 instrumentator.add(latency(metric_name="http_request_duration_seconds", metric_doc="Latency of requests in seconds."))
 instrumentator.add(request_size(metric_name="http_request_size_bytes", metric_doc="Size of requests in bytes."))
 instrumentator.add(response_size(metric_name="http_response_size_bytes", metric_doc="Size of responses in bytes."))
 
-# Instrument the app. Configuration like excluded_handlers is passed here.
-instrumentator.instrument(app, excluded_handlers=["/metrics"])
+# Instrument the app.
+instrumentator.instrument(app)
 
 # Setup monitoring to push metrics to Grafana Cloud
 setup_monitoring(app)
