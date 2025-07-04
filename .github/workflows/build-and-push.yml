@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to Docker Hub
+name: Test, Build and Push Docker Image
 
 # This workflow runs on pushes to the main branch.
 on:
@@ -9,9 +9,39 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    name: Run Pytest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          # We need to provide dummy values for the environment variables
+          # that Pydantic settings expects, otherwise the app will fail to load.
+          export SUPABASE_URL="http://dummy-url.com"
+          export SUPABASE_KEY="dummy-key"
+          pytest
+  
   build-and-push:
     name: Build and Push API to Docker Hub
     runs-on: ubuntu-latest
+    # This job depends on the 'test' job and will only run if it succeeds
+    needs: test
 
     steps:
       - name: Check out the repository
