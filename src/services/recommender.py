@@ -72,7 +72,15 @@ class MovieRecommender:
                 return []
                 
             logger.info(f"Found {len(recs_data)} recommendations.")
-            return recs_data
+            
+            # Filter out the release_date field from each result
+            filtered_results = []
+            for movie in recs_data:
+                if 'release_date' in movie:
+                    movie.pop('release_date', None)
+                filtered_results.append(movie)
+            
+            return filtered_results
         except Exception as e:
             logger.error(f"An error occurred while fetching recommendations: {e}")
             return []

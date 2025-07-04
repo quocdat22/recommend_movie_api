@@ -100,7 +100,11 @@ Use the following command to start the API, Prometheus, Grafana, and Loki:
 ```bash
 # Ensure you have a .env file as described in "Getting Started"
 docker-compose -f docker-compose.monitoring.yml up --build
+
+#Stop the services
+docker-compose -f docker-compose.monitoring.yml stop
 ```
+
 
 ### 2. Access the Services
 
