@@ -86,3 +86,35 @@ curl -X GET "http://localhost:8000/api/v1/recommendations/by-text?query=a%20psyc
 ## 🐳 Docker Hub (CI/CD)
 
 This repository can be configured with a CI/CD pipeline (e.g., using GitHub Actions in `.github/workflows/`) to automatically build and push the Docker image to a registry like Docker Hub whenever changes are merged into the main branch.
+
+---
+
+## 📊 Local Monitoring (Prometheus + Grafana + Loki)
+
+This project includes a `docker-compose.monitoring.yml` file to run a full local monitoring stack alongside the API.
+
+### 1. Run the Monitoring Stack
+
+Use the following command to start the API, Prometheus, Grafana, and Loki:
+
+```bash
+# Ensure you have a .env file as described in "Getting Started"
+docker-compose -f docker-compose.monitoring.yml up --build
+```
+
+### 2. Access the Services
+
+Once everything is running, you can access the different services in your browser:
+
+- **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Prometheus**: [http://localhost:9090](http://localhost:9090)
+- **Grafana**: [http://localhost:3000](http://localhost:3000) (Login with `admin` / `admin`)
+- **API Metrics**: [http://localhost:8000/metrics](http://localhost:8000/metrics)
+
+### 3. Next Steps in Grafana
+
+After logging into Grafana, you will need to:
+1.  **Add Data Sources**:
+    - **Prometheus**: URL `http://prometheus:9090`
+    - **Loki**: URL `http://loki:3100`
+2.  **Build Dashboards**: Create dashboards to visualize metrics from Prometheus and logs from Loki.

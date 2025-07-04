@@ -35,6 +35,7 @@ jobs:
           # that Pydantic settings expects, otherwise the app will fail to load.
           export SUPABASE_URL="http://dummy-url.com"
           export SUPABASE_KEY="dummy-key"
+          source venv/bin/activate
           pytest
   
   build-and-push:

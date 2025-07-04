@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from src.api.v1 import recommend as recommend_v1
 import logging
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -12,6 +13,11 @@ app = FastAPI(
     description="API for serving movie recommendations based on different models.",
     version="1.0.0"
 )
+
+# Instrument the app with default metrics.
+# This will create a /metrics endpoint.
+Instrumentator().instrument(app).expose(app)
+
 
 # Include routers
 logger.info("Including API routers...")
