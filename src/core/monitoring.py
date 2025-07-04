@@ -80,7 +80,11 @@ class GrafanaCloudMetricsExporter:
         encoded_auth = base64.b64encode(auth.encode()).decode()
         
         def handler(url, method, timeout, headers, data):
-            request = urllib.request.Request(url=url, data=data, headers=headers, method=method)
+            # The prometheus-client passes headers as a list of tuples.
+            # We need to convert it to a dictionary for urllib.request.Request.
+            headers_dict = dict(headers)
+            
+            request = urllib.request.Request(url=url, data=data, headers=headers_dict, method=method)
             request.add_header("Authorization", f"Basic {encoded_auth}")
             return urllib.request.urlopen(request, timeout=timeout)
         
