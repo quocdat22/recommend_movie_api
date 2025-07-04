@@ -6,14 +6,14 @@ pydantic
 pydantic-settings
 PyYAML
 python-dotenv
-#gcsfs
-#google-cloud-storage
+requests
+
+# Monitoring
+prometheus-client
+prometheus-fastapi-instrumentator
 
 # Testing
 pytest
 httpx
 pytest-mock
-
-# Monitoring
-prometheus-fastapi-instrumentator
 
