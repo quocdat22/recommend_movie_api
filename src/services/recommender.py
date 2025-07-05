@@ -73,12 +73,16 @@ class MovieRecommender:
                 
             logger.info(f"Found {len(recs_data)} recommendations.")
             
-            # Filter out the release_date field from each result
+            # Filter results to match the MovieRecommendation schema
             filtered_results = []
             for movie in recs_data:
-                if 'release_date' in movie:
-                    movie.pop('release_date', None)
-                filtered_results.append(movie)
+                filtered_movie = {
+                    "id": movie.get("id"),
+                    "title": movie.get("title"),
+                    "similarity": movie.get("similarity"),
+                    "poster_path": movie.get("poster_path"),
+                }
+                filtered_results.append(filtered_movie)
             
             return filtered_results
         except Exception as e:

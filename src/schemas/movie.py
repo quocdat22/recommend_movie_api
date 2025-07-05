@@ -7,7 +7,7 @@ class MovieRecommendation(BaseModel):
     """
     id: int
     title: str
-    overview: Optional[str] = None
     similarity: float
+    poster_path: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

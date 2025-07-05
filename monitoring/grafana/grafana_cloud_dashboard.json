@@ -1,0 +1,186 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_LOKI",
+      "label": "Loki",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "8.5.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "loki",
+      "name": "Loki",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "API Request Rate (per minute)",
+      "type": "timeseries",
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_duration_count{service_name='recommendation-api'}[5m])) * 60",
+          "legendFormat": "{{http_target}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 80 } ] },
+          "unit": "reqpm"
+        }
+      }
+    },
+    {
+      "title": "API Error Rate (%)",
+      "type": "timeseries",
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_duration_count{service_name='recommendation-api', http_status_code=~'5..'}[5m])) / sum(rate(http_server_duration_count{service_name='recommendation-api'}[5m])) * 100",
+          "legendFormat": "5xx Errors",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 10, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 80 } ] },
+          "unit": "percent"
+        }
+      }
+    },
+    {
+      "title": "API Request Latency (P95)",
+      "type": "timeseries",
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_bucket{service_name='recommendation-api'}[5m])) by (le, http_target))",
+          "legendFormat": "{{http_target}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 80 } ] },
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "title": "Supabase Client Request Duration (P95)",
+      "type": "timeseries",
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_client_duration_bucket{service_name='recommendation-api'}[5m])) by (le, http_url))",
+          "legendFormat": "{{http_url}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 80 } ] },
+          "unit": "s"
+        }
+      }
+    },
+    {
+      "title": "API Logs",
+      "type": "logs",
+      "datasource": "${DS_LOKI}",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 16 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "{service=\"recommendation-api\"}",
+          "refId": "A"
+        }
+      ],
+      "options": { "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["fastapi", "opentelemetry", "movie-api"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Movie Recommendation API (OpenTelemetry)",
+  "uid": "otel-movie-api",
+  "version": 1
+} 
