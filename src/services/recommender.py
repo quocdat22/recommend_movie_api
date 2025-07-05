@@ -70,21 +70,31 @@ class MovieRecommender:
             if not recs_data:
                 logger.warning("No similar movies found above the threshold.")
                 return []
-                
+
             logger.info(f"Found {len(recs_data)} recommendations.")
+
+            # Extract IDs to fetch poster_path
+            recommended_ids = [movie['id'] for movie in recs_data]
+
+            # Fetch poster_path for all recommended movies in a single query
+            posters_response = self.supabase.table("movies").select("id, poster_path").in_("id", recommended_ids).execute()
+            posters_data = posters_response.data
             
-            # Filter results to match the MovieRecommendation schema
-            filtered_results = []
+            # Create a map for easy lookup
+            poster_map = {movie['id']: movie.get('poster_path') for movie in posters_data}
+
+            # Combine the results
+            combined_results = []
             for movie in recs_data:
-                filtered_movie = {
-                    "id": movie.get("id"),
+                movie_id = movie.get("id")
+                combined_results.append({
+                    "id": movie_id,
                     "title": movie.get("title"),
                     "similarity": movie.get("similarity"),
-                    "poster_path": movie.get("poster_path"),
-                }
-                filtered_results.append(filtered_movie)
-            
-            return filtered_results
+                    "poster_path": poster_map.get(movie_id)
+                })
+
+            return combined_results
         except Exception as e:
             logger.error(f"An error occurred while fetching recommendations: {e}")
             return []
